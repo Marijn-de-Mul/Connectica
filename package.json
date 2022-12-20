@@ -1,0 +1,24 @@
+{
+  "name": "whmcs-discord-bot",
+  "version": "1.0.0",
+  "description": "This bot integrates Discord with WHMCS.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Marijn de Mul",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marijn-de-Mul/WHMCS-Discord-Bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Marijn-de-Mul/WHMCS-Discord-Bot/issues"
+  },
+  "homepage": "https://github.com/Marijn-de-Mul/WHMCS-Discord-Bot#readme",
+  "dependencies": {
+    "discord.js": "^14.7.1",
+    "dotenv": "^16.0.3"
+  }
+}
