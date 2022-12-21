@@ -36,8 +36,6 @@ con.connect(function(err) {
     if (err) {
         return console.error('error: ' + err.message)
     }
-
-    console.log('Connected to the MySQL server.')
 })
 
 // Initializing WHMCS API Connection
@@ -107,13 +105,11 @@ module.exports = {
                         from: EMAIL_FROM,
                         to: interaction.options.getString('email'),
                         subject: EMAIL_SUBJECT,
-                        text: verification_code
+                        text: "Connectica WHMCS Client Verfification System\n\nVerification Code: " + verification_code + "\n\nPlease use the /verify command on Discord with the given code."
                     }
                     transporter.sendMail(message, function (err, info) {
                         if (err) {
                             console.log(err)
-                        } else {
-                            console.log(info)
                         }
                     })
 
