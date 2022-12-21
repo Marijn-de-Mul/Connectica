@@ -1,0 +1,24 @@
+{
+  "DISCORD_BOT_TOKEN": "",
+  "DISCORD_BOT_CLIENT_ID": "",
+  "DISCORD_BOT_GUILD_ID": "",
+
+  "WHMCS_API_ENDPOINT": "",
+  "WHMCS_API_IDENTIFIER": "",
+  "WHMCS_API_SECRET": "",
+  "WHMCS_API_KEY": "",
+  "WHMCS_DISCORD_ROLE": "",
+
+  "EMAIL_FROM": "",
+  "EMAIL_SUBJECT": "Verification Code",
+  "EMAIL_SMTP_HOST": "",
+  "EMAIL_SMTP_HOST_PORT": 465,
+  "EMAIL_SMTP_HOST_SECURE": true,
+  "EMAIL_SMTP_HOST_AUTH_USER": "",
+  "EMAIL_SMTP_HOST_AUTH_PASSWORD": "",
+
+  "DATABASE_HOST": "localhost",
+  "DATABASE_NAME": "connectica",
+  "DATABASE_USER": "root",
+  "DATABASE_PASSWORD": ""
+}
