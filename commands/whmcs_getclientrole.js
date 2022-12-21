@@ -21,14 +21,23 @@ const mysql = require('mysql')
 const nodemailer = require('nodemailer')
 
 // Config Modules
-const { DATABASE_PASS, DATABASE_USER, DATABASE_NAME, DATABASE_HOST, EMAIL_SMTP_HOST_AUTH_PASSWORD, EMAIL_SMTP_HOST_AUTH_USER, EMAIL_SMTP_HOST_SECURE, EMAIL_SMTP_HOST_PORT, EMAIL_SMTP_HOST, EMAIL_SUBJECT, EMAIL_FROM, WHMCS_API_ENDPOINT, WHMCS_API_IDENTIFIER, WHMCS_API_SECRET, WHMCS_API_KEY } = require('./../config.json')
+const { WHMCS_DISCORD_ROLE, DATABASE_PASS, DATABASE_USER, DATABASE_NAME, DATABASE_HOST, EMAIL_SMTP_HOST_AUTH_PASSWORD, EMAIL_SMTP_HOST_AUTH_USER, EMAIL_SMTP_HOST_SECURE, EMAIL_SMTP_HOST_PORT, EMAIL_SMTP_HOST, EMAIL_SUBJECT, EMAIL_FROM, WHMCS_API_ENDPOINT, WHMCS_API_IDENTIFIER, WHMCS_API_SECRET, WHMCS_API_KEY } = require('./../config.json')
 
 
 // Initializing MySQL Database Connection
 const con = mysql.createConnection({
     host: DATABASE_HOST,
     user: DATABASE_USER,
-    password: DATABASE_PASS
+    password: DATABASE_PASS,
+    database: DATABASE_NAME
+})
+
+con.connect(function(err) {
+    if (err) {
+        return console.error('error: ' + err.message)
+    }
+
+    console.log('Connected to the MySQL server.')
 })
 
 // Initializing WHMCS API Connection
@@ -58,6 +67,11 @@ function generate(n) {
     return ("" + number).substring(add)
 }
 
+// Create Function To Check If JSON String Contains Data
+function isEmptyObject(obj) {
+    return !Object.keys(obj).length;
+}
+
 // Run The Main Command Code
 module.exports = {
     data: new SlashCommandBuilder()
@@ -71,35 +85,62 @@ module.exports = {
         whmcs.call("GetClientsDetails", {
             email: interaction.options.getString('email')
         }).then(async data => {
-            if (JSON.stringify(data.result) == '"success"') {
-                await interaction.reply("Client Found! Check your e-mail for the verification code after which you can execute /verify with the code as input.")
+            if (interaction.member.roles.cache.has(WHMCS_DISCORD_ROLE) == false) {
+                if (JSON.stringify(data.result) == '"success"') {
+                    await interaction.reply("Client Found! Check your e-mail for the verification code after which you can execute /verify with the code as input.")
 
-                const transporter = nodemailer.createTransport({
-                    host: EMAIL_SMTP_HOST,
-                    port: EMAIL_SMTP_HOST_PORT,
-                    secure: EMAIL_SMTP_HOST_SECURE,
-                    auth: {
-                        user: EMAIL_SMTP_HOST_AUTH_USER,
-                        pass: EMAIL_SMTP_HOST_AUTH_PASSWORD
+                    const transporter = nodemailer.createTransport({
+                        host: EMAIL_SMTP_HOST,
+                        port: EMAIL_SMTP_HOST_PORT,
+                        secure: EMAIL_SMTP_HOST_SECURE,
+                        auth: {
+                            user: EMAIL_SMTP_HOST_AUTH_USER,
+                            pass: EMAIL_SMTP_HOST_AUTH_PASSWORD
+                        }
+                    })
+
+                    verification_code = generate(6)
+                    discord_user_id = interaction.user.id
+                    e_mail = interaction.options.getString('email')
+
+                    message = {
+                        from: EMAIL_FROM,
+                        to: interaction.options.getString('email'),
+                        subject: EMAIL_SUBJECT,
+                        text: verification_code
                     }
-                })
+                    transporter.sendMail(message, function (err, info) {
+                        if (err) {
+                            console.log(err)
+                        } else {
+                            console.log(info)
+                        }
+                    })
 
-                message = {
-                    from: EMAIL_FROM,
-                    to: interaction.options.getString('email'),
-                    subject: EMAIL_SUBJECT,
-                    text: generate(6)
+                    const mysql_input_select = [
+                        [discord_user_id, verification_code, e_mail]
+                    ]
+
+                    const selectUsername = con.query("SELECT discord_user_id FROM whmcs WHERE discord_user_id= ?", [discord_user_id], function (err, row) {
+
+                        if (isEmptyObject(row)) {
+                            con.query("INSERT INTO whmcs (discord_user_id,verification_code,e_mail) VALUES ?", [mysql_input_select], function (err, result, fields) {
+                                if (err) throw err
+                            });
+                        } else {
+                            con.query("UPDATE whmcs SET verification_code = ? WHERE discord_user_id = ?", [verification_code, discord_user_id], function (err, result, fields) {
+                                if (err) throw err
+                            });
+                        }
+                    })
+
+                } else {
+                    await interaction.reply("No client was found using this e-mail address.")
                 }
-                transporter.sendMail(message, function(err, info) {
-                    if (err) {
-                        console.log(err)
-                    } else {
-                        console.log(info)
-                    }
-                })
             } else {
-                await interaction.reply("No client was found using this e-mail address.")
+                await interaction.reply("You already have the role.")
             }
+
         })
             .catch(async error => {
                 if (error == "Error: Client Not Found") {
